@@ -1,5 +1,29 @@
 ## media server setup
 
+
+- [media server setup](#media-server-setup)
+- [requirements](#requirements)
+- [note](#note)
+- [Services](#services)
+  - [traefik 2.x](#traefik-2x)
+    - [requirements](#requirements-1)
+  - [Authelia](#authelia)
+    - [requirements](#requirements-2)
+  - [jellyfin](#jellyfin)
+    - [requirements](#requirements-3)
+  - [monitoring services](#monitoring-services)
+    - [requirements](#requirements-4)
+  - [radarr](#radarr)
+    - [requirements](#requirements-5)
+  - [sabnzbd](#sabnzbd)
+    - [requirements](#requirements-6)
+  - [sonarr](#sonarr)
+    - [requirements](#requirements-7)
+- [deployment instructions](#deployment-instructions)
+- [contributing](#contributing)
+
+
+
 This project sets up and deploys several popular open source home media services using docker.  It also includes some monitoring tools so docker metrics are available in grafana, along with traefik access logs.  The setup is intended to be as painless as possible, and should be relatively straight forward for anyone with a basic understanding of docker.
 
 This doesn't set up anything you should consider "production ready".  No external db's, caches etc.  It's made to be easy for home setups, so take it for what it is.  It has some hacks that could be handled much better by an automation framework, but for a home setup I generally don't bother.
