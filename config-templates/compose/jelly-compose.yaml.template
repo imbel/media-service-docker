@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:${JELLY_VER}
+    user: 1010:1010
+    volumes:
+      - ${JELLY_CONF_DIR}:/config
+      - ${LOCAL_CACHE_DIR}:/cache
+      - ${LOCAL_MEDIA_DIR}:/media
+    deploy:
+      labels:
+        - traefik.http.routers.jelly.rule=Host(${JELLY_HOST})
+        - traefik.http.routers.jelly.tls=true
+        - traefik.http.routers.jelly.tls.certresolver=lets-encrypt
+        # Internal whitelist, jellyfin clients don't support 2fa
+        - traefik.http.routers.jelly.middlewares=internal-whitelist@file
+        # Enable 2fa if only browsers are used
+        # - traefik.http.routers.jelly.middlewares=authelia-secure-chain@file
+        - traefik.http.routers.jelly.entrypoints=https
+        - traefik.http.services.jelly.loadbalancer.server.port=8096
+        # - traefik.port=8096
+        - traefik.enable=true
+    networks:
+      - proxy
+networks:
+  proxy:
+    # This network was created outside of docker compose.  see ../network
+    external:
+      name: proxy-internal

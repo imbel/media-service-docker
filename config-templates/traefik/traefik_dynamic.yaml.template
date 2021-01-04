@@ -1,0 +1,22 @@
+http:
+  middlewares:
+    authelia:
+      forwardAuth:
+        address: $AUTHADDR
+        authResponseHeaders:
+        - Remote-User
+        - Remote-Groups
+        trustForwardHeader: true
+    authelia-secure-chain:
+      chain:
+        middlewares:
+        - authelia
+        - middlewares-rate-limit
+    internal-whitelist:
+      ipwhitelist:
+        sourcerange:
+        - $INTERNAL_WHITELIST_CIDR
+    middlewares-rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50

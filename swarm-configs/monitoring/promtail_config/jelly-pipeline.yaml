@@ -1,0 +1,11 @@
+scrape_configs:
+- job_name: host-headers
+  pipeline_stages:
+  - match:
+      selector: '{job="traefik-access"}'
+      stages:
+      # The JSON stage reads the log line as a JSON string and extracts
+      # the "level" field from the object for use in further stages.
+      - json:
+          expressions:
+            RequestHeader: RequestHost

@@ -1,0 +1,31 @@
+version: "3.8"
+services:
+  sonarr:
+    image: ghcr.io/linuxserver/sonarr:${SONARR_VER}
+    networks:
+      - proxy
+    environment:
+      - PUID=1010
+      - PGID=1010
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${SONARR_CONFIG_DIR}:/config
+      - ${TV_DIR}:/tv
+      - ${TMP_DOWNLOAD_DIR}:/downloads
+    deploy:
+      labels:
+        - traefik.http.routers.sonarr.rule=Host(${SONARR_HOST})
+        - traefik.http.routers.sonarr.tls=true
+        - traefik.http.routers.sonarr.tls.certresolver=lets-encrypt
+        - traefik.http.services.sonarr.loadbalancer.server.port=8989
+        - traefik.http.routers.sonarr.entrypoints=https
+        # Internal whitelist if 2fa is disabled
+        # - traefik.http.routers.sonarr.middlewares=internal-whitelist@file
+        # 2fa
+        - traefik.http.routers.sonarr.middlewares=authelia-secure-chain@file
+        - traefik.enable=true
+networks:
+  proxy:
+    # This network was created outside of docker compose.  see ../network
+    external:
+      name: proxy-internal

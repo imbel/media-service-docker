@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+  authelia:
+    image: authelia/authelia:${AUTH_VER}
+    networks:
+      - proxy
+    user: 1010:1010
+    volumes:
+      - ${AUTH_CONFIG_DIR}:/config
+    environment:
+      - TZ=America/Los_Angeles
+      - AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE=/run/secrets/authelia_smtp_secret
+      - AUTHELIA_JWT_SECRET_FILE=/run/secrets/authelia_jwt_secret
+      - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/authelia_session_secret
+    secrets:
+      - authelia_jwt_secret
+      - authelia_session_secret
+      - authelia_smtp_secret
+    deploy:
+      labels:
+        - traefik.http.routers.authelia.rule=Host($AUTHELIA_HOST)
+        - traefik.http.routers.authelia.entrypoints=https
+        - traefik.http.routers.authelia.tls=true
+        - traefik.http.routers.authelia.tls.certresolver=lets-encrypt
+        - traefik.http.services.authelia.loadbalancer.server.port=9091
+        - traefik.enable=true
+secrets:
+  authelia_jwt_secret:
+    external: true
+  authelia_session_secret:
+    external: true
+  authelia_smtp_secret:
+    external: true
+networks: 
+  proxy:
+  # This network was created outside of docker compose.  see ../network
+    external:
+      name: proxy-internal

@@ -1,0 +1,43 @@
+accessLog:
+  filePath: /var/log/traefik/access.json
+  format: json
+api:
+  dashboard: false
+  insecure: false
+certificatesResolvers:
+  lets-encrypt:
+    acme:
+      email: $LETSENCRYPT_EMAIL
+      storage: /etc/traefik/acme.json
+      tlsChallenge: {}
+      httpChallenge:
+        # used during the challenge
+        entryPoint: http
+entryPoints:
+  https:
+    address: ":443"
+  metrics:
+    address: ":8082"
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
+
+log:
+  level: DEBUG
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    entryPoint: metrics
+providers:
+  docker:
+    network: proxy-internal
+    exposedByDefault: false
+    swarmMode: true
+    watch: true
+  file:
+    filename: /etc/traefik/traefik_dynamic.yaml

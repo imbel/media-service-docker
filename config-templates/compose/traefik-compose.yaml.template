@@ -1,0 +1,33 @@
+version: "2.4"
+
+services:
+  traefik:
+    image: traefik:${TRAEFIK_VER}
+    restart: always
+    user: 1010:998
+    ports:
+      - 80:80
+      - 443:443
+    expose:
+      - "8082"
+    networks:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${TRAEFIK_CONF_DIR}:/etc/traefik
+      - ${TRAEFIK_LOG_DIR}:/var/log/traefik
+    labels:
+      - traefik.http.routers.traefik-router.rule=Host(${TRAEFIK_HOST})
+      - traefik.http.routers.traefik-router.entrypoints=https
+      - traefik.http.routers.traefik-router.service=api@internal
+      - traefik.http.routers.traefik-router.tls=true
+      - traefik.http.routers.traefik-router.tls.certresolver=lets-encrypt
+      - traefik.http.routers.traefik-router.middlewares=authelia-secure-chain@file
+      - traefik.enable=true
+    hostname: traefik
+    container_name: traefik
+
+networks:
+  proxy:
+    external:
+      name: proxy-internal

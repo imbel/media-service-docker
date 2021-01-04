@@ -1,0 +1,28 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: "debug"
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://tasks.loki:3100/loki/api/v1/push
+
+scrape_configs:
+- job_name: traefik
+  # pipeline_stages:
+  #   - match:
+  #       selector: '{job="traefik-access"}'
+  #       stages:
+  #       # The JSON stage reads the log line as a JSON string and extracts
+  #       # the "level" field from the object for use in further stages.
+  #       - json:
+  #           expressions:
+  #             RequestHost: RequestHost
+  static_configs:
+  - targets:
+    - localhost
+    labels:
+      job: traefix-access
+      __path__: /var/log/traefik/*.json

@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  sabnzbd:
+    image: ghcr.io/linuxserver/sabnzbd:${SAB_VER}
+    networks:
+      - proxy
+    environment:
+      - PUID=1010
+      - PGID=1010
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${SABNZBD_CONFIG_DIR}:/config
+      # This dir should match the local download dir radarr and sonarr mount
+      - ${TMP_DOWNLOAD_DIR}:/downloads
+      - ${INCOMPLETE_DL_DIR}:/incomplete-downloads
+    deploy:
+      labels:
+        - traefik.http.routers.sab.rule=Host(${SAB_HOST})
+        - traefik.http.routers.sab.tls=true
+        - traefik.http.routers.sab.tls.certresolver=lets-encrypt
+        - traefik.http.services.sab.loadbalancer.server.port=8080
+        - traefik.http.routers.sab.entrypoints=https
+        # Internal whitelist if 2fa is disabled
+        # - traefik.http.routers.sab.middlewares=internal-whitelist@file
+        # 2fa
+        - traefik.http.routers.sab.middlewares=authelia-secure-chain@file
+        - traefik.enable=true
+networks:
+  proxy:
+    # This network was created outside of docker compose.  see ../network
+    external:
+      name: proxy-internal
+

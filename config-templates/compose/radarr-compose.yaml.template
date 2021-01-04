@@ -1,0 +1,31 @@
+version: "3.8"
+services:
+  radarr:
+    image: ghcr.io/linuxserver/radarr:${RADARR_VER}
+    networks:
+      - proxy
+    environment:
+      - PUID=1010
+      - PGID=1010
+      - TZ=American/Los_Angeles
+    volumes:
+      - ${RADARR_CONFIG_DIR}:/config
+      - ${MOVIE_DIR}:/movies
+      - ${TMP_DOWNLOAD_DIR}:/downloads
+    deploy:
+      labels:
+        - traefik.http.routers.radarr.rule=Host(${RADARR_HOST})
+        - traefik.http.routers.radarr.tls=true
+        - traefik.http.routers.radarr.tls.certresolver=lets-encrypt
+        - traefik.http.services.radarr.loadbalancer.server.port=7878
+        # Internal whitelist if 2fa is disabled
+        # - traefik.http.routers.radarr.middlewares=internal-whitelist@file
+        # 2fa
+        - traefik.http.routers.radarr.middlewares=authelia-secure-chain@file
+        - traefik.http.routers.radarr.entrypoints=https
+        - traefik.enable=true
+networks:
+  proxy:
+    # This network was created outside of docker compose.  see ../network
+    external:
+      name: proxy-internal

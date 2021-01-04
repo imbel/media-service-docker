@@ -1,0 +1,138 @@
+version: "3.8"
+
+services:
+  prometheus:
+    image: prom/prometheus:${PROM_VER}
+    user: 1010:1010
+    networks:
+      - proxy
+    ports:
+      - "9090:9090"
+    volumes:
+      - ${PROM_CONFIG_DIR}:/etc/prometheus/
+      # Storage directory
+      - ${PROM_DATA_DIR}:/prometheus
+    deploy:
+      labels:
+        # Backend service, not behind proxy.
+        - traefik.enable=false
+
+  node-exporter:
+    image: prom/node-exporter:${NODE_EX_VER}
+    user: 1010:1010
+    networks:
+      - proxy
+    volumes:
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /proc:/host/proc:ro
+      - /etc/hostname:/etc/nodename
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.textfile.directory=/home/'
+      - '--collector.meminfo_numa'
+      - '--no-collector.ipvs'
+    deploy: 
+      labels:
+        # Backend service, not behind proxy.
+        - traefik.enable=false
+
+  cadvisor:
+    image: google/cadvisor:${CADVISOR_VER}
+    user: 1010:1010
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    deploy:
+      labels:
+        # Backend service, not behind proxy.
+        - traefik.enable=false
+    networks:
+      - proxy
+
+  promtail:
+    image: grafana/promtail:${PROMTAIL_VER}
+    user: 1010:1010
+    volumes:
+      - ${TRAEFIK_LOG_DIR}:/var/log/traefik
+      - ${PROMTAIL_CONFIG_DIR}:/etc/promtail/config
+    command: -config.file=/etc/promtail/config/promtail-config.yaml
+    deploy:
+      labels:
+        # Backend service, not behind proxy.
+        - traefik.enable=false
+    networks:
+      - proxy
+  
+  loki:
+    image: grafana/loki:${LOKI_VER}
+    user: 1010:1010
+    ports:
+      - "3100:3100"
+    volumes:
+      - ${LOKI_CONFIG_DIR}:/etc/loki
+      - ${LOKI_DATA_DIR}:/loki
+    command: -config.file=/etc/loki/loki_config.yml && —log.level=debug
+    deploy:
+      labels:
+        # Backend service, not behind proxy.
+        - traefik.enable=false
+    networks:
+      - proxy
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VER}
+    user: 1010:1010
+    networks:
+      - proxy
+    ports:
+      - "3000:3000"
+    secrets:
+      - smtp_pw
+      - grafana_admin
+    volumes:
+      # Both of these local dirs don't require any user defined files, they can be whatever.
+      - ${GRAFANA_LIB_DIR}:/var/lib/grafana
+      - ${GRAFANA_PROV_DIR}:/etc/grafana/provisioning
+    deploy:
+      labels:
+        - traefik.http.routers.grafana.rule=Host(${GRAFANA_HOST})
+        - traefik.http.routers.grafana.tls=true
+        - traefik.http.routers.grafana.tls.certresolver=lets-encrypt
+        - traefik.http.routers.grafana.entrypoints=https
+        - traefik.http.services.grafana.loadbalancer.server.port=3000
+        # Internal whitelist if 2fa is disabled
+        # - traefik.http.routers.grafana.middlewares=internal-whitelist@file
+        # 2fa
+        - traefik.http.routers.grafana.middlewares=authelia-secure-chain@file
+        - traefik.enable=true
+    environment:
+      # Local admin user secret
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_DOMAIN=${GRAFANA_ROOT_DOMAIN}
+      - GF_SMTP_ENABLED=true
+      # Format is server:port
+      - GF_SMTP_HOST=${SMTP_SERVER}
+      - GF_SMTP_USER=${SMTP_USER}
+      - GF_SMTP_PASSWORD__FILE=/run/secrets/smtp_pw
+      - GF_SMTP_FROM_ADDRESS=${SMTP_USER}
+      # Format comma separated, no spaces
+      - GF_INSTALL_PLUGINS=${GRAFANA_PLUGINS}
+secrets:
+  smtp_pw:
+    external: true
+  grafana_admin:
+    external: true
+networks:
+  proxy:
+    # This network was created outside of docker compose.  see ../network
+    external:
+      name: proxy-internal

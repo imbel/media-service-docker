@@ -1,0 +1,23 @@
+# old configs
+*/deprecated*
+
+# test configs
+*/test*
+
+# letsencrypt certs
+*acme.json
+
+# any log directories or files
+*/logs*
+*.log
+*.json
+
+# dbs
+db.*
+
+# authelia users file
+users_database_*
+
+# user specific vars
+.env
+.secrets

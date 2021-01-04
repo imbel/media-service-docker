@@ -1,0 +1,8 @@
+users:
+  $INIT_AUTH_USER:
+    displayname: $INIT_AUTH_USER_DISPLAY
+    password: $INIT_AUTH_USER_HASH
+    email: $INIT_AUTH_USER_EMAIL
+    groups:
+      - admins
+      - users
