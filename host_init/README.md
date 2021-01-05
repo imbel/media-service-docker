@@ -2,7 +2,7 @@
 
 Script with multiple functions to setup a host to run the services in this project.
 
-**Do not run this until you have populated the environment file.  See main project README for details.**
+**Do not run this until you have populated the environment file.  Instructions can be found in step #1 of [these deployment instructions](../media-service-docker/README.md#deployment-instructions).**
 
 ## instructions
 
@@ -25,3 +25,4 @@ The script host_init.sh should be run using the following parameters in this ord
 ./host_init.sh create-dirs /tmp/docker-deploy/host_init/.env # required, use full path
 ./host_init.sh add-secrets /tmp/docker-deploy/host_init/.secrets # required, use full path
 ```
+Once these steps are complete, you can fully deploy your services using [these steps](../media-service-docker/README.md#deployment-instructions).
