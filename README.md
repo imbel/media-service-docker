@@ -124,7 +124,7 @@ See host_init/sample.env for a list of required variables with examples.
 
 ## deployment instructions
 
-1. Review [host_init/README.md](the setup README) and set up the host as well as create the necessary secrets file. Copy [the example environments file](host_init/sample.env) to the `host_init` directory as `.env`, populate all variables with your environment specific values.
+1. Review [the setup README](host_init/README.md) and set up the host as well as create the necessary secrets file. Copy [the example environments file](host_init/sample.env) to the `host_init` directory as `.env`, populate all variables with your environment specific values.
 1. Once the init steps are completed, use `deploy.sh` to deploy services to your machine.
 1. To print all configuration files after being populated with user specific values..
     ```bash
