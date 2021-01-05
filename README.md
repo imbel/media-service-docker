@@ -42,7 +42,7 @@ The following services will be hosted through traefik and authelia for end user 
     * recommend using a [wildcard record](https://www.noip.com/support/knowledgebase/how-to-configure-your-no-ip-hostname/) (definition at bottom of linked page), this can be setup in any dynamic dns hosted service.  I use [no-ip](https://www.noip.com/).
 * Access to smtp server using basic auth.
 * Port forwarding over tcp 443 and 80 to traefik from your router, so services are made available from the internet.
-* User specific variables defined in both a `.secrets` and `.env` file, stored in the `host_init/` directory.  For specifics on what to populate these with, see [host_init/README.md](the setup README) and [host_init/sample.env].
+* User specific variables defined in both a `.secrets` and `.env` file, stored in the `host_init/` directory.  For specifics on what to populate these with, see [host_init/README.md](the setup README) and [./host_init/sample.env].
 
 ## note
 
