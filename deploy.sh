@@ -71,7 +71,7 @@ function set_env() {
                 fi
             done
         done
-        #set_perms $dir/host_init/.env
+        set_perms $dir/host_init/.env
     fi
 }
 

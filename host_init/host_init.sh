@@ -1,5 +1,13 @@
 #!/bin/bash
 
+if [ "$EUID" -ne 0 ]
+  then echo "
+  ${red}Script requires root for setting file and folder permissions.
+  Run with sudo ./deploy.sh
+  Exiting..."
+  exit 1
+fi
+
 function install_docker(){
     user=$1
     sudo apt update
