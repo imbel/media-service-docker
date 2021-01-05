@@ -1,20 +1,28 @@
 #!/bin/bash
 
+if [ "$EUID" -ne 0 ]
+  then echo "
+  ${red}Script requires root for setting file and folder permissions.
+  Run with sudo ./deploy.sh
+  Exiting..."
+  exit 1
+fi
+
 function install_docker(){
     user=$1
-    sudo apt update
-    sudo apt-get -y install apt-transport-https \
+    apt update
+    apt-get -y install apt-transport-https \
         ca-certificates \     
         curl \
         gnupg-agent \
         software-properties-common
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) \
     stable"
-    sudo apt update
-    sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-compose
-    sudo usermod -aG docker $user
+    apt update
+    apt-get -y install docker-ce docker-ce-cli containerd.io docker-compose
+    usermod -aG docker $user
     newgrp docker
 }
 
@@ -38,7 +46,7 @@ function create_dirs(){
     file=$1
     if [ -f $file ]; then
         dirs=$(grep -v '^#' $file | grep _DIR | sed 's/^[^=]*=//' | xargs)
-        sudo mkdir --parents $dirs
+        mkdir --parents $dirs
         return 0;
     else
         return 1;
@@ -75,8 +83,8 @@ if [ "$1" = "init" ] && [ -z "$2" ]; then
     docker swarm init
     docker network create -d overlay proxy-internal --attachable
     echo "adding users for container volume mounts"
-    sudo groupadd mediastuff -g 1010
-    sudo useradd -u 1010 -G 1010,docker -o homemedia
+    groupadd mediastuff -g 1010
+    useradd -u 1010 -G 1010,docker -o homemedia
     newgrp mediastuff
     exit 0
 fi
