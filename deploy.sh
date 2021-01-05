@@ -25,8 +25,8 @@ function set_perms(){
     file=$1
     if [ -f $file ]; then
         dirs=$(grep -v '^#' $file | grep _DIR | sed 's/^[^=]*=//' | xargs)
-        sudo chown -v -R 1010:1010 $dirs
-        sudo chmod -R 700 $dirs
+        chown -v -R 1010:1010 $dirs
+        chmod -R 700 $dirs
         return 0;
     else
         return 1;
