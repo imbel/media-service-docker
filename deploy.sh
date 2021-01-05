@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# constant
+red=`tput setaf 1`
+green=`tput setaf 2`
+yellow=`tput setaf 3`
+
+if [ "$EUID" -ne 0 ]
+  then echo "
+  ${red}Script requires root for setting file and folder permissions.
+  Run with sudo ./deploy.sh
+  Exiting..."
+  exit 1
+fi
+
 # exit when any command fails
 set -eE
 
@@ -20,50 +33,52 @@ function set_perms(){
     fi
 }
 
-set_env(){
-    # for whatever reason, docker only designed compose variable substitution to work in strings,
-    # so we can't use them for volumes config (list).  using envsubst to get around this
-    if [ -d $1 ]; then
-        dir=$1
-        swarm_path=$dir/swarm-configs
-        templ_path=$dir/config-templates
-        compose_path=$templ_path/compose
-        proxy_path=$templ_path/traefik
-        auth_path=$templ_path/authelia
-        # set host env vars for envsubst
-        export $(grep -v '^#' $dir/host_init/.env | xargs)
-        echo "populating configuration templates with env variables"
-        cd $auth_path && \
-        envsubst < users_database.yml.template > $swarm_path/authelia/config/users_database_auth.yml && \
-        envsubst < configuration.yml.template > $swarm_path/authelia/config/configuration.yml
-        cd $compose_path && \
-        envsubst < auth-compose.yaml.template > $swarm_path/authelia/docker-compose.yaml && \
-        envsubst < jelly-compose.yaml.template > $swarm_path/jellyfin/docker-compose.yaml && \
-        envsubst < mon-compose.yaml.template > $swarm_path/monitoring/docker-compose.yaml && \
-        envsubst < radarr-compose.yaml.template > $swarm_path/radarr/docker-compose.yaml && \
-        envsubst < sab-compose.yaml.template > $swarm_path/sabnzbd/docker-compose.yaml && \
-        envsubst < sonarr-compose.yaml.template > $swarm_path/sonarr/docker-compose.yaml && \
-        envsubst < traefik-compose.yaml.template > $dir/traefik/docker-compose.yaml && \
-        cd $proxy_path && \
-        envsubst < traefik_dynamic.yaml.template > $dir/traefik/config/traefik_dynamic.yaml && \
-        envsubst < traefik.yaml.template > $dir/traefik/config/traefik.yaml
-        echo "setting file and directory permissions"
-        set_perms $dir/host_init/.env
-        if [[ $? = "0" ]]; then
-            return 0;
-        else
-            return 1;
-        fi
-    else
-        echo "Directory doesn't exist.  Exiting..."
-        exit 1
+function get_template() {
+    if [ $1 = "compose" ]; then
+        TEMPL=$(find $3/config-templates -type f -name $2-compose.yaml.template)
+        echo $TEMPL
+    elif [ $1 = "config" ] && [ -d "$3/config-templates/$2" ]; then
+        TEMPL=$(find $3/config-templates/$2 -type f \( -iname "*.template" ! -iname "*-compose.*" \))
+        echo $TEMPL
     fi
 }
 
-deploy_stack(){
+function set_env() {
+    # for whatever reason, docker only designed compose variable substitution to work in strings,
+    # so we can't use them for volumes config (list).  using envsubst to get around this
+    if [ -d $1 ]; then
+        services="authelia jellyfin monitoring radarr sabnzbd sonarr traefik"
+        dir=$1
+        # set host env vars for envsubst
+        export $(grep -v '^#' $dir/host_init/.env | xargs)
+        for s in $services; do
+            compose_templates=$(get_template compose $s $dir)
+            config_templates=$(get_template config $s $dir)
+            for t in $compose_templates; do
+                if [ -d $dir/$s ]; then
+                    envsubst < $t > $dir/$s/docker-compose.yaml
+                else
+                    envsubst < $t > $dir/swarm-configs/$s/docker-compose.yaml
+                fi
+            done
+            for c in $config_templates; do
+                if [ -d $dir/$s ]; then
+                    file=$(basename "${c%%.template}")
+                    envsubst < $c > $dir/$s/config/$file
+                else
+                    file=$(basename "${c%%.template}")
+                    envsubst < $c > $dir/swarm-configs/$s/config/$file
+                fi
+            done
+        done
+        #set_perms $dir/host_init/.env
+    fi
+}
+
+function deploy_stack(){
     dir=$1
     swarm_path=$dir/swarm-configs
-    echo "
+    echo "${green}
     ###########################################################
     #                                                         #
     #                                                         #
@@ -79,7 +94,7 @@ deploy_stack(){
     cat $swarm_path/sabnzbd/docker-compose.yaml | docker stack deploy -c - media
     cat $swarm_path/sonarr/docker-compose.yaml | docker stack deploy -c - media
     cat $swarm_path/authelia/docker-compose.yaml | docker stack deploy -c - media
-        echo "
+        echo "${green}
     #########################################
     #                                       #
     #                                       #
@@ -102,7 +117,7 @@ if [ "$1" = "--help" ]; then
 fi
 
 if [ -z $2 ]; then
-    echo "No directory provided. See --help for help.  Exiting..."
+    echo "${yellow}No directory provided. See --help for help.  Exiting..."
     exit 1
 fi
 
@@ -124,10 +139,10 @@ if [ -d $2 ]; then
             exit 1
         fi
     else
-        echo "Setting environment variables failed.  Exiting..."
+        echo "${red}Setting environment variables failed.  Exiting..."
         exit 1
     fi
 else
-    echo "Directory not found.  Exiting..."
+    echo "${yellow}Directory not found.  Exiting..."
     exit 1
 fi
