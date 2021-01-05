@@ -42,7 +42,7 @@ The following services will be hosted through traefik and authelia for end user 
     * recommend using a [wildcard record](https://www.noip.com/support/knowledgebase/how-to-configure-your-no-ip-hostname/) (definition at bottom of linked page), this can be setup in any dynamic dns hosted service.  I use [no-ip](https://www.noip.com/).
 * Access to smtp server using basic auth.
 * Port forwarding over tcp 443 and 80 to traefik from your router, so services are made available from the internet.
-* User specific variables defined in both a `.secrets` and `.env` file, stored in the `host_init/` directory.  For specifics on what to populate these with, see [host_init/README.md](the setup README) and [host_init/sample.env].
+* User specific variables defined in both a `.secrets` and `.env` file, stored in the `host_init/` directory.  For specifics on what to populate these with, see [the setup README](host_init/README.md) and [the sample environment file](host_init/sample.env).
 
 ## note
 
@@ -124,7 +124,7 @@ See host_init/sample.env for a list of required variables with examples.
 
 ## deployment instructions
 
-1. Review [host_init/README.md](the setup README) and create necessary secrets file. Copy [host_init/sample.env](the example environments file) to the `host_init` directory as `.env`, populate all variables with your environment specific values.
+1. Review [the setup README](host_init/README.md) and set up the host as well as create the necessary secrets file. Copy [the example environments file](host_init/sample.env) to the `host_init` directory as `.env`, populate all variables with your environment specific values.
 1. Once the init steps are completed, use `deploy.sh` to deploy services to your machine.
 1. To print all configuration files after being populated with user specific values..
     ```bash
