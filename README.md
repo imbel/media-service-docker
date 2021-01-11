@@ -44,6 +44,24 @@ The following services will be hosted through traefik and authelia for end user 
 * Port forwarding over tcp 443 and 80 to traefik from your router, so services are made available from the internet.
 * User specific variables defined in both a `.secrets` and `.env` file, stored in the `host_init/` directory.  For specifics on what to populate these with, see [the setup README](host_init/README.md) and [the sample environment file](host_init/sample.env).
 
+## usage
+
+1. Review [the setup README](host_init/README.md) and set up the host as well as create the necessary secrets file. Copy [the example environments file](host_init/sample.env) to the `host_init` directory as `.env`, populate all variables with your environment specific values.
+1. Once the init steps are completed, use `deploy.sh` to deploy services to your machine.
+1. To print all configuration files after being populated with user specific values..
+    ```bash
+    ./deploy.sh print /docker-deploy 
+    ```
+
+1. To deploy services..
+    ```bash
+    ./deploy.sh deploy /docker-deploy
+    ```
+1. Review `docker stack services media` to ensure your containers are healthy. For any failures review `docker logs` an troubleshoot as needed.
+    1. If you run into errors with authelia generating a QR code when you first try to register a device, just retry the process.  Not sure why, but this is a bug I have run into consistently.
+1. After successful authentication with authelia, configure your services.
+
+
 ## note
 
 This guide doesn't go into setting up the actual services, like radarr/sonarr/sabnzbd/jellyfin, so if using this you need to know how these work with download services. use public docs for information on each, google is your friend.
@@ -121,24 +139,6 @@ Sonarr is very similar to radarr.  Check out [their site](https://sonarr.tv/) fo
 #### requirements
 
 See host_init/sample.env for a list of required variables with examples.
-
-## deployment instructions
-
-1. Review [the setup README](host_init/README.md) and set up the host as well as create the necessary secrets file. Copy [the example environments file](host_init/sample.env) to the `host_init` directory as `.env`, populate all variables with your environment specific values.
-1. Once the init steps are completed, use `deploy.sh` to deploy services to your machine.
-1. To print all configuration files after being populated with user specific values..
-    ```bash
-    ./deploy.sh print /docker-deploy 
-    ```
-
-1. To deploy services..
-    ```bash
-    ./deploy.sh deploy /docker-deploy
-    ```
-1. Review `docker stack services media` to ensure your containers are healthy. For any failures review `docker logs` an troubleshoot as needed.
-    1. If you run into errors with authelia generating a QR code when you first try to register a device, just retry the process.  Not sure why, but this is a bug I have run into consistently.
-1. After successful authentication with authelia, configure your services.
-
 
 ## contributing
 
